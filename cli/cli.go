@@ -90,5 +90,53 @@ func GetCommands() []*cli.Command {
 				return versionAction(c, true)
 			},
 		},
+		{
+			Name:  "search",
+			Usage: "Search for papers by title",
+			Flags: []cli.Flag{
+				&cli.StringFlag{
+					Name:    "author",
+					Usage:   "Author of the paper to search for",
+					Aliases: []string{"a"},
+				},
+				&cli.StringFlag{
+					Name:    "order",
+					Usage:   "Order the results by",
+					Aliases: []string{"o"},
+					Value:   "citations_year",
+					Action: func(ctx *cli.Context, v string) error {
+						if v != "citations_year" && v != "citations" {
+							return fmt.Errorf("order must be either 'citations_year' or 'citations', got %s", v)
+						}
+						return nil
+					},
+				},
+				&cli.StringFlag{
+					Name:    "direction",
+					Usage:   "Direction of the order (desc or asc)",
+					Aliases: []string{"d"},
+					Value:   "desc",
+					Action: func(ctx *cli.Context, v string) error {
+						if v != "desc" && v != "asc" {
+							return fmt.Errorf("direction must be either 'desc' or 'asc', got %s", v)
+						}
+						return nil
+					},
+				},
+				&cli.IntFlag{
+					Name:    "limit",
+					Usage:   "Limit the number of results",
+					Aliases: []string{"l"},
+					Value:   15,
+				},
+				&cli.StringFlag{
+					Name:    "database-url",
+					Usage:   "Connection URL for the paper and vector database",
+					Aliases: []string{"db"},
+					EnvVars: []string{"DATAILAMA_DB_URL"},
+				},
+			},
+			Action: searchAction,
+		},
 	}
 }
