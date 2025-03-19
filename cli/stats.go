@@ -27,7 +27,6 @@ func statsAction(c *cli.Context) error {
 	for _, stat := range stats {
 		t.AppendRow(table.Row{stat.Title, stat.Year, stat.Count})
 	}
-	t.SetPageSize(10)
 	fmt.Println(t.Render())
 
 	return nil

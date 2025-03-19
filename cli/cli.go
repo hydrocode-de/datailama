@@ -1,13 +1,26 @@
 package cli_interface
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 
 	"github.com/hydrocode-de/datailama/internal/api"
 	"github.com/hydrocode-de/datailama/internal/db"
+	"github.com/hydrocode-de/datailama/internal/version"
 	"github.com/urfave/cli/v2"
 )
+
+func versionAction(c *cli.Context, isShort bool) error {
+	if isShort {
+		fmt.Fprintln(c.App.Writer, version.Version)
+	} else {
+		fmt.Fprintln(c.App.Writer, "DataILama CLI")
+		fmt.Fprintf(c.App.Writer, "Version: %s\n", version.Version)
+		fmt.Fprintf(c.App.Writer, "Build Time: %s\n", version.BuildTime)
+		fmt.Fprintf(c.App.Writer, "Git Commit: %s\n", version.GitCommit)
+	}
+	return nil
+}
 
 // serveAction handles the serve command
 func serveAction(c *cli.Context) error {
@@ -21,7 +34,7 @@ func serveAction(c *cli.Context) error {
 	defer dbManager.Close()
 
 	router := api.NewServer(dbManager)
-	log.Printf("Starting server on port %s...", port)
+	fmt.Fprintf(c.App.Writer, "Starting server on port %s...\n", port)
 	return http.ListenAndServe(":"+port, router)
 }
 
@@ -62,6 +75,20 @@ func GetCommands() []*cli.Command {
 				},
 			},
 			Action: statsAction,
+		},
+		{
+			Name:  "version",
+			Usage: "Print extended version information and exit",
+			Action: func(c *cli.Context) error {
+				return versionAction(c, false)
+			},
+		},
+		{
+			Name:  "v",
+			Usage: "Print only the version number and exit",
+			Action: func(c *cli.Context) error {
+				return versionAction(c, true)
+			},
 		},
 	}
 }
