@@ -81,7 +81,7 @@ SELECT
   p.crossref->>'is-referenced-by-count' as citations,
   ((p.crossref->>'is-referenced-by-count')::double precision / (date_part('year', now()) - (p.crossref->'published'->'date-parts'->0->>0)::double precision + 0.1))::double precision as "citations_year"
 FROM matches m
-JOIN ollama_vector_collections c ON m.collection_id=c.id
+JOIN ollama_vector_collections c ON m.collection_id=c.uuid
 JOIN paper p ON p.doi=c.name
 JOIN journals j ON p.issn=j.issn
 `
@@ -137,6 +137,8 @@ func (q *Queries) SearchPaperBody(ctx context.Context, arg SearchPaperBodyParams
 
 const searchPaperByTitle = `-- name: SearchPaperByTitle :many
 SELECT 
+  '' as match,
+  0 as cosine_distance,
   paper.id,
   paper.title,
   paper.doi,
@@ -167,15 +169,17 @@ type SearchPaperByTitleParams struct {
 }
 
 type SearchPaperByTitleRow struct {
-	ID            int64       `json:"id"`
-	Title         string      `json:"title"`
-	Doi           string      `json:"doi"`
-	Url           pgtype.Text `json:"url"`
-	Journal       string      `json:"journal"`
-	Author        interface{} `json:"author"`
-	Published     pgtype.Date `json:"published"`
-	Citations     interface{} `json:"citations"`
-	CitationsYear float64     `json:"citations_year"`
+	Match          string      `json:"match"`
+	CosineDistance int32       `json:"cosine_distance"`
+	ID             int64       `json:"id"`
+	Title          string      `json:"title"`
+	Doi            string      `json:"doi"`
+	Url            pgtype.Text `json:"url"`
+	Journal        string      `json:"journal"`
+	Author         interface{} `json:"author"`
+	Published      pgtype.Date `json:"published"`
+	Citations      interface{} `json:"citations"`
+	CitationsYear  float64     `json:"citations_year"`
 }
 
 func (q *Queries) SearchPaperByTitle(ctx context.Context, arg SearchPaperByTitleParams) ([]SearchPaperByTitleRow, error) {
@@ -194,6 +198,8 @@ func (q *Queries) SearchPaperByTitle(ctx context.Context, arg SearchPaperByTitle
 	for rows.Next() {
 		var i SearchPaperByTitleRow
 		if err := rows.Scan(
+			&i.Match,
+			&i.CosineDistance,
 			&i.ID,
 			&i.Title,
 			&i.Doi,
