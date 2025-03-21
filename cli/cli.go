@@ -34,7 +34,7 @@ func serveAction(c *cli.Context) error {
 	defer dbManager.Close()
 
 	// Create combined web server with both API and site
-	router := web.NewServer(dbManager, false)
+	router := web.NewServer(dbManager, false, c)
 
 	fmt.Fprintf(c.App.Writer, "Starting server on port %s...\n", port)
 	return http.ListenAndServe(":"+port, router)

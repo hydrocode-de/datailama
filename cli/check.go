@@ -10,7 +10,7 @@ import (
 
 // checkOllamaAction handles the ollama check command
 func checkOllamaAction(c *cli.Context) error {
-	found, err := ollama.CheckOllamaConnection(c)
+	found, err := ollama.CheckOllamaConnection(c.Context)
 	if err != nil {
 		return err
 	}
@@ -22,7 +22,7 @@ func checkEmbeddingAction(c *cli.Context) error {
 	raw := c.Bool("raw-response")
 	prompt := c.String("prompt")
 	start := time.Now()
-	embedding, err := ollama.EmbedText(c, prompt)
+	embedding, err := ollama.EmbedText(c.Context, prompt)
 	if err != nil {
 		return err
 	}
