@@ -53,10 +53,10 @@ func TestSearchPaperByTitle(t *testing.T) {
 
 	t.Run("ascending order", func(t *testing.T) {
 		// Set up expectations for ascending order
-		rows := mock.NewRows([]string{"id", "title", "doi", "url", "journal", "author", "published", "citations", "citations_year"}).
-			AddRow(testData[0].ID, testData[0].Title, testData[0].Doi, testData[0].Url, testData[0].Journal,
+		rows := mock.NewRows([]string{"match", "cosine_distance", "id", "title", "doi", "url", "journal", "author", "published", "citations", "citations_year"}).
+			AddRow("", int32(0), testData[0].ID, testData[0].Title, testData[0].Doi, testData[0].Url, testData[0].Journal,
 				testData[0].Author, testData[0].Published, testData[0].Citations, testData[0].CitationsYear).
-			AddRow(testData[1].ID, testData[1].Title, testData[1].Doi, testData[1].Url, testData[1].Journal,
+			AddRow("", int32(0), testData[1].ID, testData[1].Title, testData[1].Doi, testData[1].Url, testData[1].Journal,
 				testData[1].Author, testData[1].Published, testData[1].Citations, testData[1].CitationsYear)
 
 		mock.ExpectQuery(`-- name: SearchPaperByTitle :many SELECT`).
@@ -86,10 +86,10 @@ func TestSearchPaperByTitle(t *testing.T) {
 
 	t.Run("descending order", func(t *testing.T) {
 		// Set up expectations for descending order
-		rows := mock.NewRows([]string{"id", "title", "doi", "url", "journal", "author", "published", "citations", "citations_year"}).
-			AddRow(testData[1].ID, testData[1].Title, testData[1].Doi, testData[1].Url, testData[1].Journal,
+		rows := mock.NewRows([]string{"match", "cosine_distance", "id", "title", "doi", "url", "journal", "author", "published", "citations", "citations_year"}).
+			AddRow("", int32(0), testData[1].ID, testData[1].Title, testData[1].Doi, testData[1].Url, testData[1].Journal,
 				testData[1].Author, testData[1].Published, testData[1].Citations, testData[1].CitationsYear).
-			AddRow(testData[0].ID, testData[0].Title, testData[0].Doi, testData[0].Url, testData[0].Journal,
+			AddRow("", int32(0), testData[0].ID, testData[0].Title, testData[0].Doi, testData[0].Url, testData[0].Journal,
 				testData[0].Author, testData[0].Published, testData[0].Citations, testData[0].CitationsYear)
 
 		mock.ExpectQuery(`-- name: SearchPaperByTitle :many SELECT`).
