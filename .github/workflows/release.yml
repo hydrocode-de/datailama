@@ -80,6 +80,7 @@ jobs:
       with:
         files: |
           ./artifacts/datailama-*
+        body_path: RELEASE.md
         draft: false
         prerelease: false
         generate_release_notes: true
