@@ -1,13 +1,12 @@
 package ollama
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
-
-	"github.com/urfave/cli/v2"
 )
 
 func getOllamaRest(url string) ([]byte, error) {
@@ -34,9 +33,9 @@ type ollamaTag struct {
 	Name  string `json:"name"`
 }
 
-func CheckOllamaConnection(c *cli.Context) (string, error) {
+func CheckOllamaConnection(c context.Context) (string, error) {
 	// get the connection string
-	connectionString := c.String("ollama-url")
+	connectionString := c.Value("ollama-url").(string)
 	if connectionString == "" {
 		return "", fmt.Errorf("ollama-url is required")
 	}

@@ -2,18 +2,18 @@ package ollama
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 
 	"github.com/pgvector/pgvector-go"
-	"github.com/urfave/cli/v2"
 )
 
 type EmbeddingResponse struct {
 	Embedding []float32 `json:"embedding"`
 }
 
-func EmbedText(c *cli.Context, text string) (pgvector.Vector, error) {
+func EmbedText(c context.Context, text string) (pgvector.Vector, error) {
 	embed_model, err := CheckOllamaConnection(c)
 	if err != nil {
 		return pgvector.Vector{}, err
@@ -29,7 +29,7 @@ func EmbedText(c *cli.Context, text string) (pgvector.Vector, error) {
 		return pgvector.Vector{}, err
 	}
 
-	ollama_url := c.String("ollama-url")
+	ollama_url := c.Value("ollama-url").(string)
 
 	response, err := http.Post(ollama_url+"/api/embeddings", "application/json", bytes.NewBuffer(bytePayload))
 	if err != nil {
