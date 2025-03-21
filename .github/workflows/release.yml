@@ -86,13 +86,19 @@ jobs:
         pattern: datailama-*
 
     - name: List artifacts
-      run: ls -la artifacts/
+      run: find artifacts -type f
 
     - name: Create Release
       id: create_release
       uses: softprops/action-gh-release@v1
       with:
-        files: artifacts/*
+        files: |
+          artifacts/datailama-darwin-amd64/*
+          artifacts/datailama-darwin-arm64/*
+          artifacts/datailama-linux-amd64/*
+          artifacts/datailama-linux-arm64/*
+          artifacts/datailama-windows-amd64/*
+          artifacts/datailama-windows-arm64/*
         body_path: RELEASE.md
         draft: false
         prerelease: false
