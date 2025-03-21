@@ -42,7 +42,11 @@ func searchAction(c *cli.Context) error {
 	t.SetStyle(table.StyleColoredCyanWhiteOnBlack)
 	t.AppendHeader(table.Row{"ID", "Title", "Author", "Year", "Citations", "Citations / Year"})
 	for _, paper := range result {
-		t.AppendRow(table.Row{paper.ID, paper.Title[:50] + "...", paper.Author, paper.Published.Time.Year(), paper.Citations, fmt.Sprintf("%.2f", paper.CitationsYear)})
+		title := paper.Title
+		if len(title) > 50 {
+			title = title[:50] + "..."
+		}
+		t.AppendRow(table.Row{paper.ID, title, paper.Author, paper.Published.Time.Year(), paper.Citations, fmt.Sprintf("%.2f", paper.CitationsYear)})
 	}
 
 	fmt.Println(t.Render())

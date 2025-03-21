@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/hydrocode-de/datailama/internal/api"
 	"github.com/hydrocode-de/datailama/internal/db"
 	"github.com/hydrocode-de/datailama/internal/version"
+	"github.com/hydrocode-de/datailama/internal/web"
 	"github.com/urfave/cli/v2"
 )
 
@@ -33,18 +33,22 @@ func serveAction(c *cli.Context) error {
 	}
 	defer dbManager.Close()
 
-	router := api.NewServer(dbManager)
+	// Create combined web server with both API and site
+	router := web.NewServer(dbManager, false)
+
 	fmt.Fprintf(c.App.Writer, "Starting server on port %s...\n", port)
 	return http.ListenAndServe(":"+port, router)
 }
 
 // GetCommands returns all available CLI commands
 func GetCommands() []*cli.Command {
-	return []*cli.Command{
+	connectionFlags := GetConnectionFlags()
+	commands := []*cli.Command{
 		{
 			Name:  "serve",
 			Usage: "Start the API server",
-			Flags: []cli.Flag{
+			Flags: append(
+				connectionFlags,
 				&cli.StringFlag{
 					Name:    "port",
 					Value:   "8080",
@@ -52,28 +56,13 @@ func GetCommands() []*cli.Command {
 					Aliases: []string{"p"},
 					EnvVars: []string{"DATAILAMA_PORT"},
 				},
-				&cli.StringFlag{
-					Name:    "database-url",
-					Value:   "postgresql://postgres:postgres@localhost:5432/vector_db",
-					Usage:   "Connection URL for the paper and vector database",
-					Aliases: []string{"db"},
-					EnvVars: []string{"DATAILAMA_DB_URL"},
-				},
-			},
+			),
 			Action: serveAction,
 		},
 		{
-			Name:  "stats",
-			Usage: "Get statistics about the database",
-			Flags: []cli.Flag{
-				&cli.StringFlag{
-					Name:    "database-url",
-					Value:   "postgresql://postgres:postgres@localhost:5432/vector_db",
-					Usage:   "Connection URL for the paper and vector database",
-					Aliases: []string{"db"},
-					EnvVars: []string{"DATAILAMA_DB_URL"},
-				},
-			},
+			Name:   "stats",
+			Usage:  "Get statistics about the database",
+			Flags:  connectionFlags,
 			Action: statsAction,
 		},
 		{
@@ -93,50 +82,49 @@ func GetCommands() []*cli.Command {
 		{
 			Name:  "search",
 			Usage: "Search for papers by title",
-			Flags: []cli.Flag{
-				&cli.StringFlag{
-					Name:    "author",
-					Usage:   "Author of the paper to search for",
-					Aliases: []string{"a"},
-				},
-				&cli.StringFlag{
-					Name:    "order",
-					Usage:   "Order the results by",
-					Aliases: []string{"o"},
-					Value:   "citations_year",
-					Action: func(ctx *cli.Context, v string) error {
-						if v != "citations_year" && v != "citations" {
-							return fmt.Errorf("order must be either 'citations_year' or 'citations', got %s", v)
-						}
-						return nil
+			Flags: append(
+				connectionFlags,
+				[]cli.Flag{
+					&cli.StringFlag{
+						Name:    "author",
+						Usage:   "Author of the paper to search for",
+						Aliases: []string{"a"},
 					},
-				},
-				&cli.StringFlag{
-					Name:    "direction",
-					Usage:   "Direction of the order (desc or asc)",
-					Aliases: []string{"d"},
-					Value:   "desc",
-					Action: func(ctx *cli.Context, v string) error {
-						if v != "desc" && v != "asc" {
-							return fmt.Errorf("direction must be either 'desc' or 'asc', got %s", v)
-						}
-						return nil
+					&cli.StringFlag{
+						Name:    "order",
+						Usage:   "Order the results by",
+						Aliases: []string{"o"},
+						Value:   "citations_year",
+						Action: func(ctx *cli.Context, v string) error {
+							if v != "citations_year" && v != "citations" {
+								return fmt.Errorf("order must be either 'citations_year' or 'citations', got %s", v)
+							}
+							return nil
+						},
 					},
-				},
-				&cli.IntFlag{
-					Name:    "limit",
-					Usage:   "Limit the number of results",
-					Aliases: []string{"l"},
-					Value:   15,
-				},
-				&cli.StringFlag{
-					Name:    "database-url",
-					Usage:   "Connection URL for the paper and vector database",
-					Aliases: []string{"db"},
-					EnvVars: []string{"DATAILAMA_DB_URL"},
-				},
-			},
+					&cli.StringFlag{
+						Name:    "direction",
+						Usage:   "Direction of the order (desc or asc)",
+						Aliases: []string{"d"},
+						Value:   "desc",
+						Action: func(ctx *cli.Context, v string) error {
+							if v != "desc" && v != "asc" {
+								return fmt.Errorf("direction must be either 'desc' or 'asc', got %s", v)
+							}
+							return nil
+						},
+					},
+					&cli.IntFlag{
+						Name:    "limit",
+						Usage:   "Limit the number of results",
+						Aliases: []string{"l"},
+						Value:   15,
+					},
+				}...),
 			Action: searchAction,
 		},
+		GetCheckCommand(),
 	}
+
+	return commands
 }
