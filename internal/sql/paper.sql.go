@@ -9,6 +9,7 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/pgvector/pgvector-go"
 )
 
 const getPaperStatistics = `-- name: GetPaperStatistics :many
@@ -43,6 +44,86 @@ func (q *Queries) GetPaperStatistics(ctx context.Context) ([]GetPaperStatisticsR
 			&i.Issn,
 			&i.Year,
 			&i.Count,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const searchPaperBody = `-- name: SearchPaperBody :many
+WITH embed AS(
+  SELECT $2::vector AS embedding
+),
+matches AS (
+  SELECT 
+    id,
+    text,
+    collection_id,
+    embedding <=> (SELECT embed.embedding FROM embed) AS cosine_distance
+  FROM ollama_vectors
+  ORDER BY cosine_distance
+  LIMIT $1
+)
+SELECT 
+  m.text as match,
+  m.cosine_distance,
+  p.id,
+  p.title,
+  p.doi,
+  p.url,
+  j.title as journal,
+  date(p.crossref->'published'->'date-parts'->>0) as published,
+  p.crossref->>'is-referenced-by-count' as citations,
+  ((p.crossref->>'is-referenced-by-count')::double precision / (date_part('year', now()) - (p.crossref->'published'->'date-parts'->0->>0)::double precision + 0.1))::double precision as "citations_year"
+FROM matches m
+JOIN ollama_vector_collections c ON m.collection_id=c.id
+JOIN paper p ON p.doi=c.name
+JOIN journals j ON p.issn=j.issn
+`
+
+type SearchPaperBodyParams struct {
+	Limit     int32           `json:"limit"`
+	Embedding pgvector.Vector `json:"embedding"`
+}
+
+type SearchPaperBodyRow struct {
+	Match          string      `json:"match"`
+	CosineDistance interface{} `json:"cosine_distance"`
+	ID             int64       `json:"id"`
+	Title          string      `json:"title"`
+	Doi            string      `json:"doi"`
+	Url            pgtype.Text `json:"url"`
+	Journal        string      `json:"journal"`
+	Published      pgtype.Date `json:"published"`
+	Citations      interface{} `json:"citations"`
+	CitationsYear  float64     `json:"citations_year"`
+}
+
+func (q *Queries) SearchPaperBody(ctx context.Context, arg SearchPaperBodyParams) ([]SearchPaperBodyRow, error) {
+	rows, err := q.db.Query(ctx, searchPaperBody, arg.Limit, arg.Embedding)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SearchPaperBodyRow
+	for rows.Next() {
+		var i SearchPaperBodyRow
+		if err := rows.Scan(
+			&i.Match,
+			&i.CosineDistance,
+			&i.ID,
+			&i.Title,
+			&i.Doi,
+			&i.Url,
+			&i.Journal,
+			&i.Published,
+			&i.Citations,
+			&i.CitationsYear,
 		); err != nil {
 			return nil, err
 		}

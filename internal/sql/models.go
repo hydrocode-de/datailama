@@ -6,12 +6,25 @@ package sql
 
 import (
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/pgvector/pgvector-go"
 )
 
 type Journal struct {
 	Issn  string `json:"issn"`
 	Title string `json:"title"`
 	Short string `json:"short"`
+}
+
+type OllamaVector struct {
+	ID           int64           `json:"id"`
+	CollectionID int64           `json:"collection_id"`
+	Text         string          `json:"text"`
+	Embedding    pgvector.Vector `json:"embedding"`
+}
+
+type OllamaVectorCollection struct {
+	ID   int64  `json:"id"`
+	Name string `json:"name"`
 }
 
 type Paper struct {

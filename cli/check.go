@@ -2,6 +2,7 @@ package cli_interface
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/hydrocode-de/datailama/internal/ollama"
 	"github.com/urfave/cli/v2"
@@ -17,6 +18,23 @@ func checkOllamaAction(c *cli.Context) error {
 	return nil
 }
 
+func checkEmbeddingAction(c *cli.Context) error {
+	raw := c.Bool("raw-response")
+	prompt := c.String("prompt")
+	start := time.Now()
+	embedding, err := ollama.EmbedText(c, prompt)
+	if err != nil {
+		return err
+	}
+	duration := time.Since(start)
+	if raw {
+		fmt.Fprintf(c.App.Writer, "%v\n", embedding)
+	} else {
+		fmt.Fprintf(c.App.Writer, "Embedding length: %d (took %v ms)\n", len(embedding.Slice()), duration.Milliseconds())
+	}
+	return nil
+}
+
 // GetCheckCommand returns the check command with all its subcommands
 func GetCheckCommand() *cli.Command {
 	return &cli.Command{
@@ -29,19 +47,24 @@ func GetCheckCommand() *cli.Command {
 				Flags:  GetConnectionFlags(),
 				Action: checkOllamaAction,
 			},
-			// TODO: Add more subcommands here as they are implemented
-			// {
-			//     Name:   "db",
-			//     Usage:  "Check database connection and status",
-			//     Flags:  getCheckFlags(),
-			//     Action: checkDBAction,
-			// },
-			// {
-			//     Name:   "n8n",
-			//     Usage:  "Check n8n connection and status",
-			//     Flags:  getCheckFlags(),
-			//     Action: checkN8NAction,
-			// },
+			{
+				Name:  "embedding",
+				Usage: "Check embedding model connection and status",
+				Flags: append(
+					GetConnectionFlags(),
+					&cli.BoolFlag{
+						Name:    "raw-response",
+						Usage:   "Show raw response from embedding model instead of a text message",
+						Aliases: []string{"raw"},
+					},
+					&cli.StringFlag{
+						Name:  "prompt",
+						Usage: "Prompt to embed",
+						Value: "Soil moisture is highly redundant in time",
+					},
+				),
+				Action: checkEmbeddingAction,
+			},
 		},
 	}
 }
