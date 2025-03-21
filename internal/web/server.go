@@ -6,6 +6,7 @@ import (
 	"github.com/hydrocode-de/datailama/internal/db"
 	"github.com/hydrocode-de/datailama/internal/web/api"
 	"github.com/hydrocode-de/datailama/internal/web/site"
+	"github.com/urfave/cli/v2"
 )
 
 // Server combines both API and site functionality
@@ -15,7 +16,7 @@ type Server struct {
 }
 
 // NewServer creates a new server with both API and site routes
-func NewServer(dbManager *db.Manager, apiOnly bool) *Server {
+func NewServer(dbManager *db.Manager, apiOnly bool, cliCtx *cli.Context) *Server {
 	// Create main router
 	router := http.NewServeMux()
 
@@ -25,7 +26,7 @@ func NewServer(dbManager *db.Manager, apiOnly bool) *Server {
 	}
 
 	// Register API routes (using Huma)
-	api.RegisterRoutes(router, dbManager)
+	api.RegisterRoutes(router, dbManager, cliCtx)
 
 	// Register frontend routes
 	if !apiOnly || true {
