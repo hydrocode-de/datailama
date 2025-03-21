@@ -9,11 +9,11 @@ import (
 
 // checkOllamaAction handles the ollama check command
 func checkOllamaAction(c *cli.Context) error {
-	err := ollama.OllamaConnectionFromContext(c)
+	found, err := ollama.CheckOllamaConnection(c)
 	if err != nil {
 		return err
 	}
-	fmt.Fprintln(c.App.Writer, "Ollama connection successful")
+	fmt.Fprintf(c.App.Writer, "Ollama connection successful: %s\n", found)
 	return nil
 }
 

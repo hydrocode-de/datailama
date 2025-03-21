@@ -34,31 +34,31 @@ type ollamaTag struct {
 	Name  string `json:"name"`
 }
 
-func OllamaConnectionFromContext(c *cli.Context) error {
+func CheckOllamaConnection(c *cli.Context) (string, error) {
 	// get the connection string
 	connectionString := c.String("ollama-url")
 	if connectionString == "" {
-		return fmt.Errorf("ollama-url is required")
+		return "", fmt.Errorf("ollama-url is required")
 	}
 
 	// make sure the response body is 'Ollama is running'
 	body, err := getOllamaRest(connectionString)
 	if err != nil {
-		return fmt.Errorf("failed to get the response from %s: %w", connectionString, err)
+		return "", fmt.Errorf("failed to get the response from %s: %w", connectionString, err)
 	}
 	if string(body) != "Ollama is running" {
-		return fmt.Errorf("something was at %s, but it seems like it was not Ollama: %v", connectionString, body)
+		return "", fmt.Errorf("something was at %s, but it seems like it was not Ollama: %v", connectionString, body)
 	}
 
 	// check that a model of type nomic-embed-text is available
 	body, err = getOllamaRest(connectionString + "/api/tags")
 	if err != nil {
-		return fmt.Errorf("failed to get tags from %s: %w", connectionString, err)
+		return "", fmt.Errorf("failed to get tags from %s: %w", connectionString, err)
 	}
 
 	var tags ollamaTags
 	if err := json.Unmarshal(body, &tags); err != nil {
-		return fmt.Errorf("failed to read the existing models from ollama: %w", err)
+		return "", fmt.Errorf("failed to read the existing models from ollama: %w", err)
 	}
 
 	// for now we hardcode nomic-embed-text
@@ -70,9 +70,7 @@ func OllamaConnectionFromContext(c *cli.Context) error {
 		}
 	}
 	if foundTag == (ollamaTag{}) {
-		return fmt.Errorf("datailama needs the nomic-embed-text model, which was not found Run \n ollama pull nomic-embed-text:latest\n to get it")
-	} else {
-		fmt.Printf("found %v\n", foundTag.Name)
+		return "", fmt.Errorf("datailama needs the nomic-embed-text model, which was not found Run \n ollama pull nomic-embed-text:latest\n to get it")
 	}
-	return nil
+	return foundTag.Name, nil
 }
