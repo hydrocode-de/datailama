@@ -95,7 +95,7 @@ func searchByTitle(ctx context.Context, input *struct {
 // searchByBody handles the paper search endpoint
 func searchPaperBody(ctx context.Context, input *struct {
 	Prompt string `query:"prompt" doc:"The prompt to search the "`
-	Limit  int    `query:"limit" doc:"Limit the results (deaults to 15)"`
+	Limit  int    `query:"limit" doc:"Limit the results (defaults to 15)"`
 }) (*PaperSearchBodyOutput, error) {
 	if input.Prompt == "" {
 		return nil, fmt.Errorf("empty prompts are not allowed in body searches")
