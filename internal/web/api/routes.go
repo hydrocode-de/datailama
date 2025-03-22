@@ -6,6 +6,7 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/hydrocode-de/datailama/internal/db"
+	"github.com/hydrocode-de/datailama/internal/ollama"
 	"github.com/hydrocode-de/datailama/internal/version"
 	"github.com/urfave/cli/v2"
 )
@@ -16,7 +17,7 @@ func RegisterRoutes(router *http.ServeMux, dbManager *db.Manager, cliCtx *cli.Co
 	api := humago.New(router, huma.DefaultConfig("DataILama API", version.Version))
 
 	// Register middleware
-	api.UseMiddleware(DbMiddleware(dbManager, cliCtx))
+	api.UseMiddleware(ContextMiddleware(dbManager, cliCtx))
 
 	// Register API endpoints
 	huma.Register(api, huma.Operation{
@@ -45,15 +46,22 @@ func RegisterRoutes(router *http.ServeMux, dbManager *db.Manager, cliCtx *cli.Co
 }
 
 // DbMiddleware provides database access to API handlers
-func DbMiddleware(db *db.Manager, cliCtx *cli.Context) func(ctx huma.Context, next func(huma.Context)) {
+func ContextMiddleware(db *db.Manager, cliCtx *cli.Context) func(ctx huma.Context, next func(huma.Context)) {
 	return func(ctx huma.Context, next func(huma.Context)) {
+		// Add database manager to context
 		newCtx := huma.WithValue(ctx, "db", db)
 
-		// Get Ollama URL from CLI context
-		ollamaURL := cliCtx.String("ollama-url")
+		// Transfer all relevant CLI context values to Huma context
+		if cliCtx != nil {
+			// Add Ollama URL to context
+			ollamaURL := cliCtx.String("ollama-url")
+			newCtx = huma.WithValue(newCtx, ollama.OllamaURLKey, ollamaURL)
 
-		// Add Ollama URL to context
-		newCtx = huma.WithValue(newCtx, "ollama-url", ollamaURL)
+			// Add any other CLI context values that might be needed
+			// e.g., database URL, etc.
+			dbURL := cliCtx.String("database-url")
+			newCtx = huma.WithValue(newCtx, "database-url", dbURL)
+		}
 
 		next(newCtx)
 	}

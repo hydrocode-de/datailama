@@ -9,6 +9,14 @@ import (
 	"strings"
 )
 
+// contextKey is a custom type for context keys to avoid collisions
+type contextKey string
+
+// Context keys
+const (
+	OllamaURLKey contextKey = "ollama-url"
+)
+
 func getOllamaRest(url string) ([]byte, error) {
 	resp, err := http.Get(url)
 	if err != nil {
@@ -35,7 +43,7 @@ type ollamaTag struct {
 
 func CheckOllamaConnection(c context.Context) (string, error) {
 	// get the connection string
-	connectionString := c.Value("ollama-url").(string)
+	connectionString := c.Value(OllamaURLKey).(string)
 	if connectionString == "" {
 		return "", fmt.Errorf("ollama-url is required")
 	}

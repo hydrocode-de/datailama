@@ -1,6 +1,7 @@
 package cli_interface
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -10,7 +11,11 @@ import (
 
 // checkOllamaAction handles the ollama check command
 func checkOllamaAction(c *cli.Context) error {
-	found, err := ollama.CheckOllamaConnection(c.Context)
+	// Get the ollama URL and create a new context with it
+	ollamaURL := c.String("ollama-url")
+	ctx := context.WithValue(c.Context, ollama.OllamaURLKey, ollamaURL)
+
+	found, err := ollama.CheckOllamaConnection(ctx)
 	if err != nil {
 		return err
 	}
@@ -21,8 +26,13 @@ func checkOllamaAction(c *cli.Context) error {
 func checkEmbeddingAction(c *cli.Context) error {
 	raw := c.Bool("raw-response")
 	prompt := c.String("prompt")
+
+	// Get the ollama URL and create a new context with it
+	ollamaURL := c.String("ollama-url")
+	ctx := context.WithValue(c.Context, ollama.OllamaURLKey, ollamaURL)
+
 	start := time.Now()
-	embedding, err := ollama.EmbedText(c.Context, prompt)
+	embedding, err := ollama.EmbedText(ctx, prompt)
 	if err != nil {
 		return err
 	}

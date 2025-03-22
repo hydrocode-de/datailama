@@ -29,7 +29,7 @@ func EmbedText(c context.Context, text string) (pgvector.Vector, error) {
 		return pgvector.Vector{}, err
 	}
 
-	ollama_url := c.Value("ollama-url").(string)
+	ollama_url := c.Value(OllamaURLKey).(string)
 
 	response, err := http.Post(ollama_url+"/api/embeddings", "application/json", bytes.NewBuffer(bytePayload))
 	if err != nil {
