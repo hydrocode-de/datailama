@@ -103,7 +103,7 @@ func searchBodyAction(c *cli.Context) error {
 	}
 
 	// Create appropriate table style based on color name
-	tableStyle := table.StyleColoredDark
+	var tableStyle table.Style
 	colorNum := ""
 
 	switch strings.ToLower(colorCode) {
