@@ -115,13 +115,30 @@ func GetCommands() []*cli.Command {
 						},
 					},
 					&cli.IntFlag{
-						Name:    "limit",
-						Usage:   "Limit the number of results",
-						Aliases: []string{"l"},
-						Value:   15,
+						Name:  "limit",
+						Usage: "Limit the number of results",
+						Value: 15,
 					},
 				}...),
 			Action: searchAction,
+		},
+		{
+			Name:  "search-body",
+			Usage: "Search for papers by body",
+			Flags: append(connectionFlags, []cli.Flag{
+				&cli.IntFlag{
+					Name:  "limit",
+					Usage: "Limit the number of results",
+					Value: 15,
+				},
+				&cli.StringFlag{
+					Name:    "color",
+					Usage:   "Color for highlighted search terms (red, green, yellow, blue, magenta, cyan)",
+					Aliases: []string{"c"},
+					Value:   "cyan",
+				},
+			}...),
+			Action: searchBodyAction,
 		},
 		GetCheckCommand(),
 	}
