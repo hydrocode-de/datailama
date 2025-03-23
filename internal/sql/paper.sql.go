@@ -77,6 +77,7 @@ SELECT
   p.doi,
   p.url,
   j.title as journal,
+  p.crossref->'author'->0->>'family' || ', ' || (p.crossref->'author'->0->>'given')::text as author,
   date(p.crossref->'published'->'date-parts'->>0) as published,
   p.crossref->>'is-referenced-by-count' as citations,
   ((p.crossref->>'is-referenced-by-count')::double precision / (date_part('year', now()) - (p.crossref->'published'->'date-parts'->0->>0)::double precision + 0.1))::double precision as "citations_year"
@@ -99,6 +100,7 @@ type SearchPaperBodyRow struct {
 	Doi            string      `json:"doi"`
 	Url            pgtype.Text `json:"url"`
 	Journal        string      `json:"journal"`
+	Author         interface{} `json:"author"`
 	Published      pgtype.Date `json:"published"`
 	Citations      interface{} `json:"citations"`
 	CitationsYear  float64     `json:"citations_year"`
@@ -121,6 +123,7 @@ func (q *Queries) SearchPaperBody(ctx context.Context, arg SearchPaperBodyParams
 			&i.Doi,
 			&i.Url,
 			&i.Journal,
+			&i.Author,
 			&i.Published,
 			&i.Citations,
 			&i.CitationsYear,

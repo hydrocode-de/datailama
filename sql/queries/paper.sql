@@ -55,6 +55,7 @@ SELECT
   p.doi,
   p.url,
   j.title as journal,
+  p.crossref->'author'->0->>'family' || ', ' || (p.crossref->'author'->0->>'given')::text as author,
   date(p.crossref->'published'->'date-parts'->>0) as published,
   p.crossref->>'is-referenced-by-count' as citations,
   ((p.crossref->>'is-referenced-by-count')::double precision / (date_part('year', now()) - (p.crossref->'published'->'date-parts'->0->>0)::double precision + 0.1))::double precision as "citations_year"

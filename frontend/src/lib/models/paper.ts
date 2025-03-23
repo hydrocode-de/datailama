@@ -8,4 +8,6 @@ export interface Paper {
     published: Date;
     citations: number;
     citations_year: number;
+    match?: string;
+    cosine_distance?: number;
 }
